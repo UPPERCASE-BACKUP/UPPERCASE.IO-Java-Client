@@ -25,7 +25,7 @@ public class IO {
 	private static Socket socket;
 	private static BufferedReader reader;
 	private static PrintWriter out;
-	private static PrintWriter pipe;
+	private static Map<String, PrintWriter> pipeMap = new HashMap<String, PrintWriter>();
 	private static int sendKey = 0;
 
 	private static Map<String, List<Handler>> methodMap = new HashMap<String, List<Handler>>();
@@ -39,7 +39,9 @@ public class IO {
 					String methodName = json.getString("methodName");
 					Object data = json.get("data");
 
-					if (pipe != null && methodName.equals("__CALLBACK_" + (sendKey - 1))) {
+					PrintWriter pipe = pipeMap.get(methodName);
+
+					if (pipe != null) {
 						pipe.println(data);
 						pipe.close();
 						pipe = null;
@@ -73,31 +75,47 @@ public class IO {
 		checkUpdate.start();
 	}
 
-	private static void _send(String methodName, Object data) {
+	public static class MyThread implements Runnable {
+
+		JSONObject sendData;
+
+		public MyThread(JSONObject sendData) {
+			this.sendData = sendData;
+		}
+
+		public void run() {
+			out.println(sendData);
+		}
+	}
+
+	private static Object _send(String methodName, Object data, boolean isToReceive) {
 
 		JSONObject sendData = new JSONObject();
 		sendData.put("methodName", methodName);
 		sendData.put("data", data instanceof JSONObject ? PACK_DATA((JSONObject) data) : data);
 		sendData.put("sendKey", sendKey);
 
+		String callbackMethodName = "__CALLBACK_" + sendKey;
+
 		sendKey += 1;
 
-		out.println(sendData);
-	}
+		new Thread(new MyThread(sendData)).start();
 
-	@SuppressWarnings("resource")
-	private static Object receive() {
+		if (isToReceive == true) {
 
-		try {
-			PipedOutputStream output = new PipedOutputStream();
-			pipe = new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true);
+			try {
+				PipedOutputStream output = new PipedOutputStream();
 
-			JSONObject json = new JSONObject(new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine());
+				pipeMap.put(callbackMethodName, new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true));
 
-			return UNPACK_DATA(json);
+				@SuppressWarnings("resource")
+				JSONObject json = new JSONObject(new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine());
 
-		} catch (IOException e) {
-			e.printStackTrace();
+				return UNPACK_DATA(json);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return null;
@@ -113,7 +131,7 @@ public class IO {
 		private List<String> methodNames = new ArrayList<String>();
 
 		public ROOM(String boxName, String name) {
-			_send("__ENTER_ROOM", roomName = boxName + "/" + name);
+			_send("__ENTER_ROOM", roomName = boxName + "/" + name, false);
 		}
 
 		public void on(String methodName, Handler method) {
@@ -145,13 +163,7 @@ public class IO {
 		}
 
 		public Object send(String methodName, Object data, boolean isWithCallback) {
-
-			_send(roomName + "/" + methodName, data);
-
-			if (isWithCallback) {
-				return receive();
-			}
-			return null;
+			return _send(roomName + "/" + methodName, data, isWithCallback);
 		}
 
 		public void send(String methodName, Object data) {
@@ -160,7 +172,7 @@ public class IO {
 
 		public void exit() {
 
-			_send("__EXIT_ROOM", roomName);
+			_send("__EXIT_ROOM", roomName, false);
 
 			for (String methodName : methodNames) {
 				methodMap.remove(roomName + "/" + methodName);
