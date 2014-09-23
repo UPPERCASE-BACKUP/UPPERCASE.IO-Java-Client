@@ -11,7 +11,9 @@ import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,17 +64,36 @@ public class IO {
 		}
 	};
 
-	public static void CONNECT_TO_IO_SERVER(String host, int socketServerPort) {
+	public static void CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort) {
 
 		try {
+
+			URL url = new URL((isSecure ? "https://" : "http://") + doorHost + ":" + webServerPort + "/__SOCKET_SERVER_HOST?defaultHost=" + doorHost);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			String host = "";
+			String line;
+
+			conn.setRequestMethod("GET");
+			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+			while ((line = rd.readLine()) != null) {
+				host += line;
+			}
+			rd.close();
+
 			socket = new Socket(host, socketServerPort);
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 		checkUpdate.start();
+	}
+
+	public static void CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort) {
+		CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort);
 	}
 
 	public static class MyThread implements Runnable {
