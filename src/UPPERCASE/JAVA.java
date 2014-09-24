@@ -2,6 +2,7 @@ package UPPERCASE;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -20,10 +21,13 @@ public class JAVA {
 			// date attribute names
 			List<String> dateAttrNames = new ArrayList<String>();
 
-			for (String name : json.keySet()) {
-				Object value;
+			@SuppressWarnings("unchecked")
+			Iterator<String> iterator = json.keys();
 
-				value = json.get(name);
+			while (iterator.hasNext()) {
+
+				String name = iterator.next();
+				Object value = json.get(name);
 
 				// when value is Date type
 				if (value instanceof Date) {
@@ -78,7 +82,12 @@ public class JAVA {
 				json.remove("__DATE_ATTR_NAMES");
 			}
 
-			for (String name : json.keySet()) {
+			@SuppressWarnings("unchecked")
+			Iterator<String> iterator = json.keys();
+
+			while (iterator.hasNext()) {
+
+				String name = iterator.next();
 				Object value = json.get(name);
 
 				// when value is data
