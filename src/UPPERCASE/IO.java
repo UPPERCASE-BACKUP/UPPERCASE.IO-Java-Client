@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class IO {
@@ -59,6 +60,8 @@ public class IO {
 					}
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}
@@ -109,7 +112,7 @@ public class IO {
 		}
 	}
 
-	private static Object _send(String methodName, Object data, boolean isToReceive) {
+	private static Object _send(String methodName, Object data, boolean isToReceive) throws JSONException {
 
 		JSONObject sendData = new JSONObject();
 		sendData.put("methodName", methodName);
@@ -151,7 +154,7 @@ public class IO {
 		private String roomName;
 		private List<String> methodNames = new ArrayList<String>();
 
-		public ROOM(String boxName, String name) {
+		public ROOM(String boxName, String name) throws JSONException {
 			_send("__ENTER_ROOM", roomName = boxName + "/" + name, false);
 		}
 
@@ -183,15 +186,15 @@ public class IO {
 			methodNames.remove(methodName);
 		}
 
-		public Object send(String methodName, Object data, boolean isWithCallback) {
+		public Object send(String methodName, Object data, boolean isWithCallback) throws JSONException {
 			return _send(roomName + "/" + methodName, data, isWithCallback);
 		}
 
-		public void send(String methodName, Object data) {
+		public void send(String methodName, Object data) throws JSONException {
 			send(roomName + "/" + methodName, data, false);
 		}
 
-		public void exit() {
+		public void exit() throws JSONException {
 
 			_send("__EXIT_ROOM", roomName, false);
 
@@ -210,7 +213,7 @@ public class IO {
 		private ROOM roomForCreate;
 		private Map<String, ROOM> roomsForCreate = new HashMap<String, ROOM>();
 
-		public MODEL(String boxName, String name) {
+		public MODEL(String boxName, String name) throws JSONException {
 
 			this.boxName = boxName;
 			this.name = name;
@@ -226,35 +229,35 @@ public class IO {
 			return room;
 		}
 
-		public JSONObject create(JSONObject data) {
+		public JSONObject create(JSONObject data) throws JSONException {
 
 			JSONObject result = ((JSONObject) room.send("create", data, true));
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 		}
 
-		public JSONObject get(String id) {
+		public JSONObject get(String id) throws JSONException {
 
 			JSONObject result = ((JSONObject) room.send("get", id, true));
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 		}
 
-		public JSONObject update(JSONObject data) {
+		public JSONObject update(JSONObject data) throws JSONException {
 
 			JSONObject result = ((JSONObject) room.send("update", data, true));
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 		}
 
-		public JSONObject remove(String id) {
+		public JSONObject remove(String id) throws JSONException {
 
 			JSONObject result = ((JSONObject) room.send("remove", id, true));
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) throws JSONException {
 
 			JSONObject params = new JSONObject();
 
@@ -288,23 +291,23 @@ public class IO {
 			return savedDataSet;
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) throws JSONException {
 			return find(null, null, null, null);
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort) {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort) throws JSONException {
 			return find(null, null, null);
 		}
 
-		public List<JSONObject> find(JSONObject filter) {
+		public List<JSONObject> find(JSONObject filter) throws JSONException {
 			return find(null, null);
 		}
 
-		public List<JSONObject> find() {
+		public List<JSONObject> find() throws JSONException {
 			return find(null);
 		}
 
-		public Long count(JSONObject filter) {
+		public Long count(JSONObject filter) throws JSONException {
 
 			JSONObject params = new JSONObject();
 
@@ -317,11 +320,11 @@ public class IO {
 			return result.isNull("count") ? null : result.getLong("count");
 		}
 
-		public Long count() {
+		public Long count() throws JSONException {
 			return count(null);
 		}
 
-		public Boolean checkIsExists(JSONObject filter) {
+		public Boolean checkIsExists(JSONObject filter) throws JSONException {
 
 			JSONObject params = new JSONObject();
 
@@ -334,11 +337,11 @@ public class IO {
 			return result.isNull("isExists") ? null : result.getBoolean("isExists");
 		}
 
-		public Boolean checkIsExists() {
+		public Boolean checkIsExists() throws JSONException {
 			return checkIsExists(null);
 		}
 
-		public void onNew(Handler func) {
+		public void onNew(Handler func) throws JSONException {
 
 			if (roomForCreate == null) {
 				roomForCreate = new ROOM(boxName, name + "/create");
@@ -347,7 +350,7 @@ public class IO {
 			roomForCreate.on("create", func);
 		}
 
-		public void onNew(Map<String, Object> properties, Handler func) {
+		public void onNew(Map<String, Object> properties, Handler func) throws JSONException {
 
 			for (String propertyName : properties.keySet()) {
 				Object value = properties.get(propertyName);
