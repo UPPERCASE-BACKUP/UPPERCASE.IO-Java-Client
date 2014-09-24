@@ -38,7 +38,13 @@ public class IO {
 			try {
 				while (true) {
 
-					JSONObject json = new JSONObject(reader.readLine());
+					String str = reader.readLine();
+
+					if (str == null) {
+						// TODO:!
+					}
+
+					JSONObject json = new JSONObject(str);
 					String methodName = json.getString("methodName");
 					Object data = json.get("data");
 
@@ -67,6 +73,21 @@ public class IO {
 		}
 	};
 
+	public static void CONNECT_TO_ROOM_SERVER(String host, int socketServerPort) {
+
+		try {
+
+			socket = new Socket(host, socketServerPort);
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		checkUpdate.start();
+	}
+
 	public static void CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort) {
 
 		try {
@@ -84,15 +105,11 @@ public class IO {
 			}
 			rd.close();
 
-			socket = new Socket(host, socketServerPort);
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+			CONNECT_TO_ROOM_SERVER(host, socketServerPort);
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		checkUpdate.start();
 	}
 
 	public static void CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort) {
@@ -108,7 +125,8 @@ public class IO {
 		}
 
 		public void run() {
-			out.println(sendData);
+			out.write(sendData + "\r\n");
+			out.flush();
 		}
 	}
 
