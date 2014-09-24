@@ -112,34 +112,40 @@ public class IO {
 		}
 	}
 
-	private static Object _send(String methodName, Object data, boolean isToReceive) throws JSONException {
+	private static Object _send(String methodName, Object data, boolean isToReceive) {
 
-		JSONObject sendData = new JSONObject();
-		sendData.put("methodName", methodName);
-		sendData.put("data", data instanceof JSONObject ? PACK_DATA((JSONObject) data) : data);
-		sendData.put("sendKey", sendKey);
+		try {
 
-		String callbackMethodName = "__CALLBACK_" + sendKey;
+			JSONObject sendData = new JSONObject();
+			sendData.put("methodName", methodName);
+			sendData.put("data", data instanceof JSONObject ? PACK_DATA((JSONObject) data) : data);
+			sendData.put("sendKey", sendKey);
 
-		sendKey += 1;
+			String callbackMethodName = "__CALLBACK_" + sendKey;
 
-		new Thread(new MyThread(sendData)).start();
+			sendKey += 1;
 
-		if (isToReceive == true) {
+			new Thread(new MyThread(sendData)).start();
 
-			try {
-				PipedOutputStream output = new PipedOutputStream();
+			if (isToReceive == true) {
 
-				pipeMap.put(callbackMethodName, new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true));
+				try {
+					PipedOutputStream output = new PipedOutputStream();
 
-				@SuppressWarnings("resource")
-				JSONObject json = new JSONObject(new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine());
+					pipeMap.put(callbackMethodName, new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true));
 
-				return UNPACK_DATA(json);
+					@SuppressWarnings("resource")
+					JSONObject json = new JSONObject(new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine());
 
-			} catch (IOException e) {
-				e.printStackTrace();
+					return UNPACK_DATA(json);
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 
 		return null;
@@ -154,7 +160,7 @@ public class IO {
 		private String roomName;
 		private List<String> methodNames = new ArrayList<String>();
 
-		public ROOM(String boxName, String name) throws JSONException {
+		public ROOM(String boxName, String name) {
 			_send("__ENTER_ROOM", roomName = boxName + "/" + name, false);
 		}
 
@@ -186,15 +192,15 @@ public class IO {
 			methodNames.remove(methodName);
 		}
 
-		public Object send(String methodName, Object data, boolean isWithCallback) throws JSONException {
+		public Object send(String methodName, Object data, boolean isWithCallback) {
 			return _send(roomName + "/" + methodName, data, isWithCallback);
 		}
 
-		public void send(String methodName, Object data) throws JSONException {
+		public void send(String methodName, Object data) {
 			send(roomName + "/" + methodName, data, false);
 		}
 
-		public void exit() throws JSONException {
+		public void exit() {
 
 			_send("__EXIT_ROOM", roomName, false);
 
@@ -213,7 +219,7 @@ public class IO {
 		private ROOM roomForCreate;
 		private Map<String, ROOM> roomsForCreate = new HashMap<String, ROOM>();
 
-		public MODEL(String boxName, String name) throws JSONException {
+		public MODEL(String boxName, String name) {
 
 			this.boxName = boxName;
 			this.name = name;
@@ -229,119 +235,175 @@ public class IO {
 			return room;
 		}
 
-		public JSONObject create(JSONObject data) throws JSONException {
+		public JSONObject create(JSONObject data) {
 
-			JSONObject result = ((JSONObject) room.send("create", data, true));
+			try {
 
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+				JSONObject result = ((JSONObject) room.send("create", data, true));
+
+				return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+			return null;
 		}
 
-		public JSONObject get(String id) throws JSONException {
+		public JSONObject get(String id) {
 
-			JSONObject result = ((JSONObject) room.send("get", id, true));
+			try {
 
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+				JSONObject result = ((JSONObject) room.send("get", id, true));
+
+				return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+			return null;
 		}
 
-		public JSONObject update(JSONObject data) throws JSONException {
+		public JSONObject update(JSONObject data) {
 
-			JSONObject result = ((JSONObject) room.send("update", data, true));
+			try {
 
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+				JSONObject result = ((JSONObject) room.send("update", data, true));
+
+				return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+			return null;
 		}
 
-		public JSONObject remove(String id) throws JSONException {
+		public JSONObject remove(String id) {
 
-			JSONObject result = ((JSONObject) room.send("remove", id, true));
+			try {
 
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+				JSONObject result = ((JSONObject) room.send("remove", id, true));
+
+				return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+			return null;
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) throws JSONException {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
 
-			JSONObject params = new JSONObject();
+			try {
 
-			if (filter != null) {
-				params.put("filter", filter);
+				JSONObject params = new JSONObject();
+
+				if (filter != null) {
+					params.put("filter", filter);
+				}
+				if (sort != null) {
+					params.put("sort", sort);
+				}
+				if (start != null) {
+					params.put("start", start);
+				}
+				if (count != null) {
+					params.put("count", count);
+				}
+
+				JSONObject result = ((JSONObject) room.send("find", params, true));
+
+				if (result.isNull("savedDataSet")) {
+					return null;
+				}
+
+				List<JSONObject> savedDataSet = new ArrayList<JSONObject>();
+
+				JSONArray jsonArray = result.getJSONArray("savedDataSet");
+
+				for (int i = 0; i < jsonArray.length(); i += 1) {
+					savedDataSet.add((JSONObject) jsonArray.get(i));
+				}
+
+				return savedDataSet;
+
+			} catch (JSONException e) {
+				e.printStackTrace();
 			}
-			if (sort != null) {
-				params.put("sort", sort);
-			}
-			if (start != null) {
-				params.put("start", start);
-			}
-			if (count != null) {
-				params.put("count", count);
-			}
 
-			JSONObject result = ((JSONObject) room.send("find", params, true));
-
-			if (result.isNull("savedDataSet")) {
-				return null;
-			}
-
-			List<JSONObject> savedDataSet = new ArrayList<JSONObject>();
-
-			JSONArray jsonArray = result.getJSONArray("savedDataSet");
-
-			for (int i = 0; i < jsonArray.length(); i += 1) {
-				savedDataSet.add((JSONObject) jsonArray.get(i));
-			}
-
-			return savedDataSet;
+			return null;
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) throws JSONException {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) {
 			return find(null, null, null, null);
 		}
 
-		public List<JSONObject> find(JSONObject filter, JSONObject sort) throws JSONException {
+		public List<JSONObject> find(JSONObject filter, JSONObject sort) {
 			return find(null, null, null);
 		}
 
-		public List<JSONObject> find(JSONObject filter) throws JSONException {
+		public List<JSONObject> find(JSONObject filter) {
 			return find(null, null);
 		}
 
-		public List<JSONObject> find() throws JSONException {
+		public List<JSONObject> find() {
 			return find(null);
 		}
 
-		public Long count(JSONObject filter) throws JSONException {
+		public Long count(JSONObject filter) {
 
-			JSONObject params = new JSONObject();
+			try {
 
-			if (filter != null) {
-				params.put("filter", filter);
+				JSONObject params = new JSONObject();
+
+				if (filter != null) {
+					params.put("filter", filter);
+				}
+
+				JSONObject result = ((JSONObject) room.send("count", params, true));
+
+				return result.isNull("count") ? null : result.getLong("count");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
 			}
 
-			JSONObject result = ((JSONObject) room.send("count", params, true));
-
-			return result.isNull("count") ? null : result.getLong("count");
+			return null;
 		}
 
-		public Long count() throws JSONException {
+		public Long count() {
 			return count(null);
 		}
 
-		public Boolean checkIsExists(JSONObject filter) throws JSONException {
+		public Boolean checkIsExists(JSONObject filter) {
 
-			JSONObject params = new JSONObject();
+			try {
 
-			if (filter != null) {
-				params.put("filter", filter);
+				JSONObject params = new JSONObject();
+
+				if (filter != null) {
+					params.put("filter", filter);
+				}
+
+				JSONObject result = ((JSONObject) room.send("checkIsExists", params, true));
+
+				return result.isNull("isExists") ? null : result.getBoolean("isExists");
+
+			} catch (JSONException e) {
+				e.printStackTrace();
 			}
 
-			JSONObject result = ((JSONObject) room.send("checkIsExists", params, true));
-
-			return result.isNull("isExists") ? null : result.getBoolean("isExists");
+			return null;
 		}
 
-		public Boolean checkIsExists() throws JSONException {
+		public Boolean checkIsExists() {
 			return checkIsExists(null);
 		}
 
-		public void onNew(Handler func) throws JSONException {
+		public void onNew(Handler func) {
 
 			if (roomForCreate == null) {
 				roomForCreate = new ROOM(boxName, name + "/create");
@@ -350,7 +412,7 @@ public class IO {
 			roomForCreate.on("create", func);
 		}
 
-		public void onNew(Map<String, Object> properties, Handler func) throws JSONException {
+		public void onNew(Map<String, Object> properties, Handler func) {
 
 			for (String propertyName : properties.keySet()) {
 				Object value = properties.get(propertyName);

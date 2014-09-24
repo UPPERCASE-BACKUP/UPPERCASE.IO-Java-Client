@@ -13,41 +13,49 @@ public class JAVA {
 	/**
 	 * pack data with Date type.
 	 */
-	public static JSONObject PACK_DATA(JSONObject json) throws JSONException {
+	public static JSONObject PACK_DATA(JSONObject json) {
 
-		// date attribute names
-		List<String> dateAttrNames = new ArrayList<String>();
+		try {
 
-		for (String name : json.keySet()) {
-			Object value = json.get(name);
+			// date attribute names
+			List<String> dateAttrNames = new ArrayList<String>();
 
-			// when value is Date type
-			if (value instanceof Date) {
+			for (String name : json.keySet()) {
+				Object value;
 
-				// change to timestamp integer.
-				json.put(name, ((Date) value).getTime());
-				dateAttrNames.add(name);
-			}
+				value = json.get(name);
 
-			// when value is data
-			else if (value instanceof JSONObject) {
-				json.put(name, PACK_DATA((JSONObject) value));
-			}
+				// when value is Date type
+				if (value instanceof Date) {
 
-			// when value is array
-			else if (value instanceof JSONArray) {
+					// change to timestamp integer.
+					json.put(name, ((Date) value).getTime());
+					dateAttrNames.add(name);
+				}
 
-				for (int i = 0; i < ((JSONArray) value).length(); i += 1) {
-					Object v = ((JSONArray) value).get(i);
+				// when value is data
+				else if (value instanceof JSONObject) {
+					json.put(name, PACK_DATA((JSONObject) value));
+				}
 
-					if (v instanceof JSONObject) {
-						((JSONArray) value).put(i, PACK_DATA((JSONObject) v));
+				// when value is array
+				else if (value instanceof JSONArray) {
+
+					for (int i = 0; i < ((JSONArray) value).length(); i += 1) {
+						Object v = ((JSONArray) value).get(i);
+
+						if (v instanceof JSONObject) {
+							((JSONArray) value).put(i, PACK_DATA((JSONObject) v));
+						}
 					}
 				}
 			}
-		}
 
-		json.put("__DATE_ATTR_NAMES", dateAttrNames);
+			json.put("__DATE_ATTR_NAMES", dateAttrNames);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 
 		return json;
 	}
@@ -55,38 +63,44 @@ public class JAVA {
 	/**
 	 * unpack data with Date type.
 	 */
-	public static JSONObject UNPACK_DATA(JSONObject json) throws JSONException {
+	public static JSONObject UNPACK_DATA(JSONObject json) {
 
-		// when date attribute names exists
-		if (!json.isNull("__DATE_ATTR_NAMES")) {
+		try {
 
-			// change timestamp integer to Date type.
-			for (int i = 0; i < ((JSONArray) json.get("__DATE_ATTR_NAMES")).length(); i += 1) {
-				String dateAttrName = (String) ((JSONArray) json.get("__DATE_ATTR_NAMES")).get(i);
-				json.put(dateAttrName, new Date((Long) json.get(dateAttrName)));
-			}
-			json.remove("__DATE_ATTR_NAMES");
-		}
+			// when date attribute names exists
+			if (!json.isNull("__DATE_ATTR_NAMES")) {
 
-		for (String name : json.keySet()) {
-			Object value = json.get(name);
-
-			// when value is data
-			if (value instanceof JSONObject) {
-				json.put(name, UNPACK_DATA((JSONObject) value));
+				// change timestamp integer to Date type.
+				for (int i = 0; i < ((JSONArray) json.get("__DATE_ATTR_NAMES")).length(); i += 1) {
+					String dateAttrName = (String) ((JSONArray) json.get("__DATE_ATTR_NAMES")).get(i);
+					json.put(dateAttrName, new Date((Long) json.get(dateAttrName)));
+				}
+				json.remove("__DATE_ATTR_NAMES");
 			}
 
-			// when value is array
-			else if (value instanceof JSONArray) {
+			for (String name : json.keySet()) {
+				Object value = json.get(name);
 
-				for (int i = 0; i < ((JSONArray) value).length(); i += 1) {
-					Object v = ((JSONArray) value).get(i);
+				// when value is data
+				if (value instanceof JSONObject) {
+					json.put(name, UNPACK_DATA((JSONObject) value));
+				}
 
-					if (v instanceof JSONObject) {
-						((JSONArray) value).put(i, UNPACK_DATA((JSONObject) v));
+				// when value is array
+				else if (value instanceof JSONArray) {
+
+					for (int i = 0; i < ((JSONArray) value).length(); i += 1) {
+						Object v = ((JSONArray) value).get(i);
+
+						if (v instanceof JSONObject) {
+							((JSONArray) value).put(i, UNPACK_DATA((JSONObject) v));
+						}
 					}
 				}
 			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 
 		return json;
