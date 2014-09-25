@@ -1,4 +1,4 @@
-package UPPERCASE;
+package UPPERCASE.IO;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,7 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class JAVA {
+public class UTIL {
 
 	/**
 	 * pack data with Date type.
