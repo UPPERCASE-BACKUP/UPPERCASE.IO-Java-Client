@@ -9,6 +9,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import UPPERCASE.IO.MODELHandlers.CheckIsExistsHandlers;
+import UPPERCASE.IO.MODELHandlers.CountHandlers;
+import UPPERCASE.IO.MODELHandlers.CreateHandlers;
+import UPPERCASE.IO.MODELHandlers.FindHandlers;
+import UPPERCASE.IO.MODELHandlers.GetHandlers;
+import UPPERCASE.IO.MODELHandlers.RemoveHandlers;
+import UPPERCASE.IO.MODELHandlers.UpdateHandlers;
+
 public class MODEL {
 
 	private String boxName;
@@ -34,11 +42,54 @@ public class MODEL {
 		return room;
 	}
 
-	public JSONObject create(JSONObject data) {
+	public JSONObject create(JSONObject data, CreateHandlers handlers) {
 
 		try {
 
 			JSONObject result = ((JSONObject) room.send("create", data, true));
+
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("validErrors") != true) {
+					handlers.notValid(result.getJSONObject("validErrors"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else {
+					handlers.success(result.getJSONObject("savedData"));
+				}
+			}
+
+			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public JSONObject create(JSONObject data) {
+		return create(data, null);
+	}
+
+	public JSONObject get(String id, GetHandlers handlers) {
+
+		try {
+
+			JSONObject result = ((JSONObject) room.send("get", id, true));
+
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else if (result.isNull("savedData") == true) {
+					handlers.notExists();
+				} else {
+					handlers.success(result.getJSONObject("savedData"));
+				}
+			}
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 
@@ -50,10 +101,28 @@ public class MODEL {
 	}
 
 	public JSONObject get(String id) {
+		return get(id, null);
+	}
+
+	public JSONObject update(JSONObject data, UpdateHandlers handlers) {
 
 		try {
 
-			JSONObject result = ((JSONObject) room.send("get", id, true));
+			JSONObject result = ((JSONObject) room.send("update", data, true));
+
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("validErrors") != true) {
+					handlers.notValid(result.getJSONObject("validErrors"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else if (result.isNull("savedData") == true) {
+					handlers.notExists();
+				} else {
+					handlers.success(result.getJSONObject("savedData"));
+				}
+			}
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 
@@ -65,10 +134,26 @@ public class MODEL {
 	}
 
 	public JSONObject update(JSONObject data) {
+		return update(data, null);
+	}
+
+	public JSONObject remove(String id, RemoveHandlers handlers) {
 
 		try {
 
-			JSONObject result = ((JSONObject) room.send("update", data, true));
+			JSONObject result = ((JSONObject) room.send("remove", id, true));
+
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else if (result.isNull("savedData") == true) {
+					handlers.notExists();
+				} else {
+					handlers.success(result.getJSONObject("savedData"));
+				}
+			}
 
 			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
 
@@ -80,21 +165,10 @@ public class MODEL {
 	}
 
 	public JSONObject remove(String id) {
-
-		try {
-
-			JSONObject result = ((JSONObject) room.send("remove", id, true));
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return null;
+		return remove(id, null);
 	}
 
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
+	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count, FindHandlers handlers) {
 
 		try {
 
@@ -127,6 +201,16 @@ public class MODEL {
 				savedDataSet.add((JSONObject) jsonArray.get(i));
 			}
 
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else {
+					handlers.success(savedDataSet);
+				}
+			}
+
 			return savedDataSet;
 
 		} catch (JSONException e) {
@@ -136,23 +220,43 @@ public class MODEL {
 		return null;
 	}
 
+	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
+		return find(filter, sort, start, count, null);
+	}
+
+	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count, FindHandlers handlers) {
+		return find(filter, sort, null, count, handlers);
+	}
+
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) {
-		return find(null, null, null, null);
+		return find(filter, sort, count, (FindHandlers) null);
+	}
+
+	public List<JSONObject> find(JSONObject filter, JSONObject sort, FindHandlers handlers) {
+		return find(filter, sort, null, handlers);
 	}
 
 	public List<JSONObject> find(JSONObject filter, JSONObject sort) {
-		return find(null, null, null);
+		return find(filter, sort, (FindHandlers) null);
+	}
+
+	public List<JSONObject> find(JSONObject filter, FindHandlers handlers) {
+		return find(filter, null, handlers);
 	}
 
 	public List<JSONObject> find(JSONObject filter) {
-		return find(null, null);
+		return find(filter, (FindHandlers) null);
+	}
+
+	public List<JSONObject> find(FindHandlers handlers) {
+		return find(null, handlers);
 	}
 
 	public List<JSONObject> find() {
-		return find(null);
+		return find((FindHandlers) null);
 	}
 
-	public Long count(JSONObject filter) {
+	public Long count(JSONObject filter, CountHandlers handlers) {
 
 		try {
 
@@ -164,6 +268,16 @@ public class MODEL {
 
 			JSONObject result = ((JSONObject) room.send("count", params, true));
 
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else {
+					handlers.success(result.getLong("count"));
+				}
+			}
+
 			return result.isNull("count") ? null : result.getLong("count");
 
 		} catch (JSONException e) {
@@ -173,11 +287,19 @@ public class MODEL {
 		return null;
 	}
 
-	public Long count() {
-		return count(null);
+	public Long count(JSONObject filter) {
+		return count(filter, null);
 	}
 
-	public Boolean checkIsExists(JSONObject filter) {
+	public Long count(CountHandlers handlers) {
+		return count(null, handlers);
+	}
+
+	public Long count() {
+		return count((CountHandlers) null);
+	}
+
+	public Boolean checkIsExists(JSONObject filter, CheckIsExistsHandlers handlers) {
 
 		try {
 
@@ -198,8 +320,16 @@ public class MODEL {
 		return null;
 	}
 
+	public Boolean checkIsExists(JSONObject filter) {
+		return checkIsExists(filter, null);
+	}
+
+	public Boolean checkIsExists(CheckIsExistsHandlers handlers) {
+		return checkIsExists(null, handlers);
+	}
+
 	public Boolean checkIsExists() {
-		return checkIsExists(null);
+		return checkIsExists((CheckIsExistsHandlers) null);
 	}
 
 	public void onNew(Method func) {

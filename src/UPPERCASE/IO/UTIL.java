@@ -12,14 +12,56 @@ import org.json.JSONObject;
 public class UTIL {
 
 	/**
-	 * pack data with Date type.
+	 * copy data.
 	 */
-	public static JSONObject PACK_DATA(JSONObject json) {
+	public static JSONArray COPY_ARRAY(JSONArray jsonArray) {
+
+		JSONArray copy = null;
 
 		try {
 
-			// date attribute names
-			List<String> dateAttrNames = new ArrayList<String>();
+			copy = new JSONArray();
+
+			for (int i = 0; i < jsonArray.length(); i += 1) {
+				Object value = jsonArray.get(i);
+
+				// when value is Date type
+				if (value instanceof Date) {
+					copy.put(i, new Date(((Date) value).getTime()));
+				}
+
+				// when value is data
+				else if (value instanceof JSONObject) {
+					copy.put(i, COPY_DATA((JSONObject) value));
+				}
+
+				// when value is array
+				else if (value instanceof JSONArray) {
+					copy.put(i, COPY_ARRAY((JSONArray) value));
+				}
+
+				else {
+					copy.put(i, value);
+				}
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return copy;
+	}
+
+	/**
+	 * copy data.
+	 */
+	public static JSONObject COPY_DATA(JSONObject json) {
+
+		JSONObject copy = null;
+
+		try {
+
+			copy = new JSONObject();
 
 			@SuppressWarnings("unchecked")
 			Iterator<String> iterator = json.keys();
@@ -31,15 +73,65 @@ public class UTIL {
 
 				// when value is Date type
 				if (value instanceof Date) {
+					copy.put(name, new Date(((Date) value).getTime()));
+				}
+
+				// when value is data
+				else if (value instanceof JSONObject) {
+					copy.put(name, COPY_DATA((JSONObject) value));
+				}
+
+				// when value is array
+				else if (value instanceof JSONArray) {
+					copy.put(name, COPY_ARRAY((JSONArray) value));
+				}
+
+				else {
+					copy.put(name, value);
+				}
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return copy;
+	}
+
+	/**
+	 * pack data with Date type.
+	 */
+	public static JSONObject PACK_DATA(JSONObject json) {
+
+		JSONObject result = null;
+
+		try {
+
+			// result
+			result = COPY_DATA(json);
+
+			// date attribute names
+			List<String> dateAttrNames = new ArrayList<String>();
+
+			@SuppressWarnings("unchecked")
+			Iterator<String> iterator = result.keys();
+
+			while (iterator.hasNext()) {
+
+				String name = iterator.next();
+				Object value = result.get(name);
+
+				// when value is Date type
+				if (value instanceof Date) {
 
 					// change to timestamp integer.
-					json.put(name, ((Date) value).getTime());
+					result.put(name, ((Date) value).getTime());
 					dateAttrNames.add(name);
 				}
 
 				// when value is data
 				else if (value instanceof JSONObject) {
-					json.put(name, PACK_DATA((JSONObject) value));
+					result.put(name, PACK_DATA((JSONObject) value));
 				}
 
 				// when value is array
@@ -55,13 +147,13 @@ public class UTIL {
 				}
 			}
 
-			json.put("__DATE_ATTR_NAMES", dateAttrNames);
+			result.put("__DATE_ATTR_NAMES", dateAttrNames);
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 
-		return json;
+		return result;
 	}
 
 	/**
@@ -69,30 +161,35 @@ public class UTIL {
 	 */
 	public static JSONObject UNPACK_DATA(JSONObject json) {
 
+		JSONObject result = null;
+
 		try {
 
+			// result
+			result = COPY_DATA(json);
+
 			// when date attribute names exists
-			if (!json.isNull("__DATE_ATTR_NAMES")) {
+			if (!result.isNull("__DATE_ATTR_NAMES")) {
 
 				// change timestamp integer to Date type.
-				for (int i = 0; i < ((JSONArray) json.get("__DATE_ATTR_NAMES")).length(); i += 1) {
-					String dateAttrName = (String) ((JSONArray) json.get("__DATE_ATTR_NAMES")).get(i);
-					json.put(dateAttrName, new Date((Long) json.get(dateAttrName)));
+				for (int i = 0; i < ((JSONArray) result.get("__DATE_ATTR_NAMES")).length(); i += 1) {
+					String dateAttrName = (String) ((JSONArray) result.get("__DATE_ATTR_NAMES")).get(i);
+					result.put(dateAttrName, new Date((Long) result.get(dateAttrName)));
 				}
-				json.remove("__DATE_ATTR_NAMES");
+				result.remove("__DATE_ATTR_NAMES");
 			}
 
 			@SuppressWarnings("unchecked")
-			Iterator<String> iterator = json.keys();
+			Iterator<String> iterator = result.keys();
 
 			while (iterator.hasNext()) {
 
 				String name = iterator.next();
-				Object value = json.get(name);
+				Object value = result.get(name);
 
 				// when value is data
 				if (value instanceof JSONObject) {
-					json.put(name, UNPACK_DATA((JSONObject) value));
+					result.put(name, UNPACK_DATA((JSONObject) value));
 				}
 
 				// when value is array
@@ -112,6 +209,6 @@ public class UTIL {
 			e.printStackTrace();
 		}
 
-		return json;
+		return result;
 	}
 }
