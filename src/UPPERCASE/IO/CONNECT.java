@@ -123,7 +123,7 @@ public class CONNECT {
 	 * @param socketServerPort
 	 * @param disconnectedHandler
 	 */
-	public static void CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
+	public static boolean CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
 
 		String host = null;
 
@@ -152,8 +152,13 @@ public class CONNECT {
 		}
 
 		if (host != null) {
+
 			CONNECT_TO_ROOM_SERVER(host, socketServerPort, disconnectedHandler);
+
+			return true;
 		}
+
+		return false;
 	}
 
 	/**
@@ -162,8 +167,8 @@ public class CONNECT {
 	 * @param socketServerPort
 	 * @param disconnectedHandler
 	 */
-	public static void CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
-		CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort, disconnectedHandler);
+	public static boolean CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
+		return CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort, disconnectedHandler);
 	}
 
 	private static class SendThread implements Runnable {
