@@ -15,7 +15,7 @@ public class ROOM {
 	 * @param name
 	 */
 	public ROOM(String boxName, String name) {
-		CONNECT.send("__ENTER_ROOM", roomName = boxName + "/" + name, false);
+		CONNECT.enterRoom(roomName = boxName + "/" + name);
 	}
 
 	/**
