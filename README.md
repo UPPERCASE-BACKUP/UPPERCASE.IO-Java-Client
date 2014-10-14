@@ -1,6 +1,10 @@
 # UPPERCASE.IO-Java-Client
 
-UPPERCASE.IO Java client
+UPPERCASE.IO Java client for Java or android project.
+
+### Install
+Just add [UPPERCASE.IO-Java-Client.jar](https://github.com/Hanul/UPPERCASE.IO-Java-Client/raw/master/UPPERCASE.IO-Java-Client.jar) on the build path.
+* for normal Java project(not Android project), you need [JSON-java](https://github.com/douglascrockford/JSON-java).
 
 ### ROOM
 

@@ -1,7 +1,6 @@
 package UPPERCASE.IO;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +22,11 @@ public class MODEL {
 	private String name;
 
 	private ROOM room;
-	private ROOM roomForCreate;
-	private Map<String, ROOM> roomsForCreate = new HashMap<String, ROOM>();
 
+	/**
+	 * @param boxName
+	 * @param name
+	 */
 	public MODEL(String boxName, String name) {
 
 		this.boxName = boxName;
@@ -34,14 +35,25 @@ public class MODEL {
 		room = new ROOM(boxName, name);
 	}
 
+	/**
+	 * @return name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return room
+	 */
 	public ROOM getRoom() {
 		return room;
 	}
 
+	/**
+	 * @param data
+	 * @param handlers
+	 * @return savedData
+	 */
 	public JSONObject create(JSONObject data, CreateHandlers handlers) {
 
 		try {
@@ -69,10 +81,19 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param data
+	 * @return savedData
+	 */
 	public JSONObject create(JSONObject data) {
 		return create(data, null);
 	}
 
+	/**
+	 * @param id
+	 * @param handlers
+	 * @return savedData
+	 */
 	public JSONObject get(String id, GetHandlers handlers) {
 
 		try {
@@ -100,10 +121,111 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param id
+	 * @return savedData
+	 */
 	public JSONObject get(String id) {
 		return get(id, null);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param isRandom
+	 * @param handlers
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter, JSONObject sort, Boolean isRandom, GetHandlers handlers) {
+
+		try {
+
+			JSONObject params = new JSONObject();
+
+			if (filter != null) {
+				params.put("filter", filter);
+			}
+			if (sort != null) {
+				params.put("sort", sort);
+			}
+			if (isRandom != null) {
+				params.put("isRandom", isRandom);
+			}
+
+			JSONObject result = ((JSONObject) room.send("get", params, true));
+
+			if (handlers != null) {
+				if (result.isNull("errorMsg") != true) {
+					handlers.error(result.getString("errorMsg"));
+				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+					handlers.notAuthed();
+				} else if (result.isNull("savedData") == true) {
+					handlers.notExists();
+				} else {
+					handlers.success(result.getJSONObject("savedData"));
+				}
+			}
+
+			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param isRandom
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter, JSONObject sort, Boolean isRandom) {
+		return get(filter, sort, isRandom, null);
+	}
+
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param handlers
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter, JSONObject sort, GetHandlers handlers) {
+		return get(filter, sort, null, handlers);
+	}
+
+	/**
+	 * @param filter
+	 * @param sort
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter, JSONObject sort) {
+		return get(filter, sort, (GetHandlers) null);
+	}
+
+	/**
+	 * @param filter
+	 * @param handlers
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter, GetHandlers handlers) {
+		return get(filter, null, handlers);
+	}
+
+	/**
+	 * @param filter
+	 * @return savedData
+	 */
+	public JSONObject get(JSONObject filter) {
+		return get(filter, (GetHandlers) null);
+	}
+
+	/**
+	 * @param data
+	 * @param handlers
+	 * @return savedData
+	 */
 	public JSONObject update(JSONObject data, UpdateHandlers handlers) {
 
 		try {
@@ -133,10 +255,19 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param data
+	 * @return savedData
+	 */
 	public JSONObject update(JSONObject data) {
 		return update(data, null);
 	}
 
+	/**
+	 * @param id
+	 * @param handlers
+	 * @return savedData
+	 */
 	public JSONObject remove(String id, RemoveHandlers handlers) {
 
 		try {
@@ -164,10 +295,22 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param id
+	 * @return savedData
+	 */
 	public JSONObject remove(String id) {
 		return remove(id, null);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param start
+	 * @param count
+	 * @param handlers
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count, FindHandlers handlers) {
 
 		try {
@@ -220,42 +363,94 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param start
+	 * @param count
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
 		return find(filter, sort, start, count, null);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param count
+	 * @param handlers
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count, FindHandlers handlers) {
 		return find(filter, sort, null, count, handlers);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param count
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) {
 		return find(filter, sort, count, (FindHandlers) null);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @param handlers
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort, FindHandlers handlers) {
 		return find(filter, sort, null, handlers);
 	}
 
+	/**
+	 * @param filter
+	 * @param sort
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, JSONObject sort) {
 		return find(filter, sort, (FindHandlers) null);
 	}
 
+	/**
+	 * @param filter
+	 * @param handlers
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter, FindHandlers handlers) {
 		return find(filter, null, handlers);
 	}
 
+	/**
+	 * @param filter
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(JSONObject filter) {
 		return find(filter, (FindHandlers) null);
 	}
 
+	/**
+	 * @param handlers
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find(FindHandlers handlers) {
 		return find(null, handlers);
 	}
 
+	/**
+	 * @return savedDataSet
+	 */
 	public List<JSONObject> find() {
 		return find((FindHandlers) null);
 	}
 
+	/**
+	 * @param filter
+	 * @param handlers
+	 * @return count
+	 */
 	public Long count(JSONObject filter, CountHandlers handlers) {
 
 		try {
@@ -287,18 +482,34 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param filter
+	 * @return count
+	 */
 	public Long count(JSONObject filter) {
 		return count(filter, null);
 	}
 
+	/**
+	 * @param handlers
+	 * @return count
+	 */
 	public Long count(CountHandlers handlers) {
 		return count(null, handlers);
 	}
 
+	/**
+	 * @return count
+	 */
 	public Long count() {
 		return count((CountHandlers) null);
 	}
 
+	/**
+	 * @param filter
+	 * @param handlers
+	 * @return isExists
+	 */
 	public Boolean checkIsExists(JSONObject filter, CheckIsExistsHandlers handlers) {
 
 		try {
@@ -320,39 +531,162 @@ public class MODEL {
 		return null;
 	}
 
+	/**
+	 * @param filter
+	 * @return isExists
+	 */
 	public Boolean checkIsExists(JSONObject filter) {
 		return checkIsExists(filter, null);
 	}
 
+	/**
+	 * @param handlers
+	 * @return isExists
+	 */
 	public Boolean checkIsExists(CheckIsExistsHandlers handlers) {
 		return checkIsExists(null, handlers);
 	}
 
+	/**
+	 * @return isExists
+	 */
 	public Boolean checkIsExists() {
 		return checkIsExists((CheckIsExistsHandlers) null);
 	}
 
-	public void onNew(Method func) {
-
-		if (roomForCreate == null) {
-			roomForCreate = new ROOM(boxName, name + "/create");
-		}
-
-		roomForCreate.on("create", func);
+	private interface Rooms {
+		public void exit();
 	}
 
-	public void onNew(Map<String, Object> properties, Method func) {
+	/**
+	 * @param handler
+	 * @return rooms
+	 */
+	public Rooms onNew(Method handler) {
+
+		final ROOM roomForCreate = new ROOM(boxName, name + "/create");
+
+		roomForCreate.on("create", handler);
+
+		return new Rooms() {
+
+			@Override
+			public void exit() {
+				roomForCreate.exit();
+			}
+		};
+	}
+
+	/**
+	 * @param properties
+	 * @param handler
+	 * @return rooms
+	 */
+	public Rooms onNew(final Map<String, Object> properties, final Method handler) {
 
 		for (String propertyName : properties.keySet()) {
 			Object value = properties.get(propertyName);
 
-			ROOM room = roomsForCreate.get(propertyName + "/" + value);
+			final ROOM roomForCreate = new ROOM(boxName, name + "/" + propertyName + "/" + value + "/create");
 
-			if (room == null) {
-				roomsForCreate.put(propertyName + "/" + value, room = new ROOM(boxName, name + "/" + propertyName + "/" + value + "/create"));
-			}
+			roomForCreate.on("create", new Method() {
 
-			room.on("create", func);
+				@Override
+				public void handle(Object savedData) {
+
+					for (String propertyName : properties.keySet()) {
+						Object value = properties.get(propertyName);
+
+						try {
+
+							if (!((JSONObject) savedData).get(propertyName).equals(value)) {
+								return;
+							}
+
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+
+					handler.handle(savedData);
+				}
+			});
+
+			return new Rooms() {
+
+				@Override
+				public void exit() {
+					roomForCreate.exit();
+				}
+			};
 		}
+
+		return null;
+	}
+
+	/**
+	 * @param handler
+	 * @return rooms
+	 */
+	public Rooms onRemove(Method handler) {
+
+		final ROOM roomForRemove = new ROOM(boxName, name + "/remove");
+
+		roomForRemove.on("remove", handler);
+
+		return new Rooms() {
+
+			@Override
+			public void exit() {
+				roomForRemove.exit();
+			}
+		};
+	}
+
+	/**
+	 * @param properties
+	 * @param handler
+	 * @return rooms
+	 */
+	public Rooms onRemove(final Map<String, Object> properties, final Method handler) {
+
+		for (String propertyName : properties.keySet()) {
+			Object value = properties.get(propertyName);
+
+			final ROOM roomForRemove = new ROOM(boxName, name + "/" + propertyName + "/" + value + "/remove");
+
+			roomForRemove.on("remove", new Method() {
+
+				@Override
+				public void handle(Object savedData) {
+
+					for (String propertyName : properties.keySet()) {
+						Object value = properties.get(propertyName);
+
+						try {
+
+							if (!((JSONObject) savedData).get(propertyName).equals(value)) {
+								return;
+							}
+
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+
+					handler.handle(savedData);
+				}
+			});
+
+			return new Rooms() {
+
+				@Override
+				public void exit() {
+					roomForRemove.exit();
+				}
+			};
+		}
+
+		return null;
 	}
 }

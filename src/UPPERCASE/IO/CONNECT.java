@@ -27,6 +27,7 @@ public class CONNECT {
 	private static int sendKey = 0;
 
 	private static Map<String, List<Method>> methodMap = new HashMap<String, List<Method>>();
+	private static DisconnectedHandler disconnectedHandler;
 
 	private static Thread checkUpdate = new Thread() {
 		public void run() {
@@ -36,7 +37,12 @@ public class CONNECT {
 					String str = reader.readLine();
 
 					if (str == null) {
-						// TODO: 접속이 끊어졌을 경우입니다.
+
+						// disconnected
+						disconnectedHandler.handle();
+
+						return;
+
 					} else {
 
 						JSONObject json = new JSONObject(str);
@@ -69,7 +75,14 @@ public class CONNECT {
 		}
 	};
 
-	public static void CONNECT_TO_ROOM_SERVER(String host, int socketServerPort) {
+	/**
+	 * @param host
+	 * @param socketServerPort
+	 * @param disconnectedHandler
+	 */
+	public static void CONNECT_TO_ROOM_SERVER(String host, int socketServerPort, DisconnectedHandler _disconnectedHandler) {
+
+		disconnectedHandler = _disconnectedHandler;
 
 		try {
 
@@ -84,7 +97,14 @@ public class CONNECT {
 		checkUpdate.start();
 	}
 
-	public static void CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort) {
+	/**
+	 * @param doorHost
+	 * @param isSecure
+	 * @param webServerPort
+	 * @param socketServerPort
+	 * @param disconnectedHandler
+	 */
+	public static void CONNECT_TO_IO_SERVER(String doorHost, boolean isSecure, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
 
 		try {
 
@@ -101,15 +121,21 @@ public class CONNECT {
 			}
 			rd.close();
 
-			CONNECT_TO_ROOM_SERVER(host, socketServerPort);
+			CONNECT_TO_ROOM_SERVER(host, socketServerPort, disconnectedHandler);
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort) {
-		CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort);
+	/**
+	 * @param host
+	 * @param webServerPort
+	 * @param socketServerPort
+	 * @param disconnectedHandler
+	 */
+	public static void CONNECT_TO_IO_SERVER(String host, int webServerPort, int socketServerPort, DisconnectedHandler disconnectedHandler) {
+		CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort, disconnectedHandler);
 	}
 
 	private static class SendThread implements Runnable {
@@ -126,6 +152,12 @@ public class CONNECT {
 		}
 	}
 
+	/**
+	 * @param methodName
+	 * @param data
+	 * @param isToReceive
+	 * @return returnData
+	 */
 	public static Object send(String methodName, Object data, boolean isToReceive) {
 
 		try {
@@ -165,7 +197,7 @@ public class CONNECT {
 		return null;
 	}
 
-	public static Map<String, List<Method>> getMethodMap() {
+	static Map<String, List<Method>> getMethodMap() {
 		return methodMap;
 	}
 }

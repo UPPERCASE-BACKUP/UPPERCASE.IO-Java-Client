@@ -12,7 +12,10 @@ import org.json.JSONObject;
 public class UTIL {
 
 	/**
-	 * copy data.
+	 * copy array.
+	 * 
+	 * @param jsonArray
+	 * @return copiedArray
 	 */
 	public static JSONArray COPY_ARRAY(JSONArray jsonArray) {
 
@@ -54,6 +57,9 @@ public class UTIL {
 
 	/**
 	 * copy data.
+	 * 
+	 * @param json
+	 * @return copiedData
 	 */
 	public static JSONObject COPY_DATA(JSONObject json) {
 
@@ -100,6 +106,9 @@ public class UTIL {
 
 	/**
 	 * pack data with Date type.
+	 * 
+	 * @param json
+	 * @return packedData
 	 */
 	public static JSONObject PACK_DATA(JSONObject json) {
 
@@ -158,6 +167,9 @@ public class UTIL {
 
 	/**
 	 * unpack data with Date type.
+	 * 
+	 * @param json
+	 * @return unpackedData
 	 */
 	public static JSONObject UNPACK_DATA(JSONObject json) {
 
