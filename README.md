@@ -1,9 +1,10 @@
 # UPPERCASE.IO-Java-Client
 
-UPPERCASE.IO Java client for Java or android project.
+UPPERCASE.IO Java client for Java or Android project.
 
 ### Install
 Just add [UPPERCASE.IO-Java-Client.jar](https://github.com/Hanul/UPPERCASE.IO-Java-Client/raw/master/UPPERCASE.IO-Java-Client.jar) on the build path.
+* you need [UPPERCASE.JAVA-JSON-UTIL.jar](https://github.com/Hanul/UPPERCASE.JAVA-JSON-UTIL)
 * for normal Java project(not Android project), you need [JSON-java](https://github.com/douglascrockford/JSON-java).
 
 ### ROOM
@@ -84,4 +85,4 @@ System.out.println("CHECK IS EXISTS: " + TestModel.checkIsExists());
 
 ## Contact
 * [Facebook UPPERCASE.IO User Group](https://www.facebook.com/groups/uppercase/)
-* [GitHub Issues](https://github.com/UPPERCASE-Series/UPPERCASE.IO-Java-Client/issues)
+* [GitHub Issues](https://github.com/Hanul/UPPERCASE.IO-Java-Client/issues)

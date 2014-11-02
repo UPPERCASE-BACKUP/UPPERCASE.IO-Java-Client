@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6"/>
 	<classpathentry kind="lib" path="/json-android/json-android.jar"/>
+	<classpathentry kind="lib" path="/UPPERCASE.JAVA-JSON-UTIL/UPPERCASE.JAVA-JSON-UTIL.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
