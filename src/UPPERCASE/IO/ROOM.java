@@ -72,7 +72,7 @@ public class ROOM {
 	 * @param data
 	 */
 	public void send(String methodName, Object data) {
-		send(roomName + "/" + methodName, data, false);
+		send(methodName, data, false);
 	}
 
 	/**

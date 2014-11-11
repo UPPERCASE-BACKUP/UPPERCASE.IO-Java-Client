@@ -74,21 +74,25 @@ public class CONNECT {
 
 									JSONObject json = new JSONObject(str);
 									String methodName = json.getString("methodName");
-									Object data = json.get("data");
 
-									PrintWriter pipe = pipeMap.get(methodName);
+									if (json.isNull("data") != true) {
 
-									if (pipe != null) {
-										pipe.println(data);
-										pipe.close();
-										pipe = null;
-									} else {
+										Object data = json.get("data");
 
-										List<Method> methods = getMethodMap().get(methodName);
+										PrintWriter pipe = pipeMap.get(methodName);
 
-										if (methods != null) {
-											for (Method method : methods) {
-												method.handle(data instanceof JSONObject ? UTIL.UNPACK_DATA((JSONObject) data) : data);
+										if (pipe != null) {
+											pipe.println(data);
+											pipe.close();
+											pipe = null;
+										} else {
+
+											List<Method> methods = getMethodMap().get(methodName);
+
+											if (methods != null) {
+												for (Method method : methods) {
+													method.handle(data instanceof JSONObject ? UTIL.UNPACK_DATA((JSONObject) data) : data);
+												}
 											}
 										}
 									}
