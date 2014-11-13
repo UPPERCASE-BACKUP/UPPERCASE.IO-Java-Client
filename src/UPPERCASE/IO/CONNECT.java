@@ -215,9 +215,15 @@ public class CONNECT {
 					pipeMap.put(callbackMethodName, new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true));
 
 					@SuppressWarnings("resource")
-					JSONObject json = new JSONObject(new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine());
+					String json = new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine();
 
-					return UTIL.UNPACK_DATA(json);
+					if (json == null || json.equals("null")) {
+						return null;
+					}
+
+					JSONObject result = new JSONObject(json);
+
+					return UTIL.UNPACK_DATA(result);
 
 				} catch (IOException e) {
 					e.printStackTrace();
