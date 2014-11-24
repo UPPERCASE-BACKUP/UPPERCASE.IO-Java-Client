@@ -52,81 +52,74 @@ public class MODEL {
 	/**
 	 * @param data
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject create(JSONObject data, CreateHandlers handlers) {
+	public void create(JSONObject data, final CreateHandlers handlers) {
 
-		try {
+		room.send("create", data, new Method() {
 
-			JSONObject result = ((JSONObject) room.send("create", data, true));
+			@Override
+			public void handle(Object data) {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("validErrors") != true) {
-					handlers.notValid(result.getJSONObject("validErrors"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else {
-					handlers.success(result.getJSONObject("savedData"));
+				try {
+
+					JSONObject result = (JSONObject) data;
+
+					if (handlers != null) {
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("validErrors") != true) {
+							handlers.notValid(result.getJSONObject("validErrors"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else {
+							handlers.success(result.getJSONObject("savedData"));
+						}
+					}
+
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
 			}
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return null;
+		});
 	}
 
 	/**
 	 * @param data
-	 * @return savedData
 	 */
-	public JSONObject create(JSONObject data) {
-		return create(data, null);
+	public void create(JSONObject data) {
+		create(data, null);
 	}
 
 	/**
 	 * @param id
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject get(String id, GetHandlers handlers) {
+	public void get(String id, final GetHandlers handlers) {
 
-		try {
+		room.send("get", id, new Method() {
 
-			JSONObject result = ((JSONObject) room.send("get", id, true));
+			@Override
+			public void handle(Object data) {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else if (result.isNull("savedData") == true) {
-					handlers.notExists();
-				} else {
-					handlers.success(result.getJSONObject("savedData"));
+				try {
+
+					JSONObject result = (JSONObject) data;
+
+					if (result.isNull("errorMsg") != true) {
+						handlers.error(result.getString("errorMsg"));
+					} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+						handlers.notAuthed();
+					} else if (result.isNull("savedData") == true) {
+						handlers.notExists();
+					} else {
+						handlers.success(result.getJSONObject("savedData"));
+					}
+
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
 			}
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	/**
-	 * @param id
-	 * @return savedData
-	 */
-	public JSONObject get(String id) {
-		return get(id, null);
+		});
 	}
 
 	/**
@@ -134,9 +127,8 @@ public class MODEL {
 	 * @param sort
 	 * @param isRandom
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject get(JSONObject filter, JSONObject sort, Boolean isRandom, GetHandlers handlers) {
+	public void get(JSONObject filter, JSONObject sort, Boolean isRandom, final GetHandlers handlers) {
 
 		try {
 
@@ -152,155 +144,121 @@ public class MODEL {
 				params.put("isRandom", isRandom);
 			}
 
-			JSONObject result = ((JSONObject) room.send("get", params, true));
+			room.send("get", params, new Method() {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else if (result.isNull("savedData") == true) {
-					handlers.notExists();
-				} else {
-					handlers.success(result.getJSONObject("savedData"));
+				@Override
+				public void handle(Object data) {
+
+					try {
+
+						JSONObject result = (JSONObject) data;
+
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else if (result.isNull("savedData") == true) {
+							handlers.notExists();
+						} else {
+							handlers.success(result.getJSONObject("savedData"));
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
+			});
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
-		return null;
-	}
-
-	/**
-	 * @param filter
-	 * @param sort
-	 * @param isRandom
-	 * @return savedData
-	 */
-	public JSONObject get(JSONObject filter, JSONObject sort, Boolean isRandom) {
-		return get(filter, sort, isRandom, null);
 	}
 
 	/**
 	 * @param filter
 	 * @param sort
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject get(JSONObject filter, JSONObject sort, GetHandlers handlers) {
-		return get(filter, sort, null, handlers);
-	}
-
-	/**
-	 * @param filter
-	 * @param sort
-	 * @return savedData
-	 */
-	public JSONObject get(JSONObject filter, JSONObject sort) {
-		return get(filter, sort, (GetHandlers) null);
+	public void get(JSONObject filter, JSONObject sort, GetHandlers handlers) {
+		get(filter, sort, null, handlers);
 	}
 
 	/**
 	 * @param filter
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject get(JSONObject filter, GetHandlers handlers) {
-		return get(filter, null, handlers);
-	}
-
-	/**
-	 * @param filter
-	 * @return savedData
-	 */
-	public JSONObject get(JSONObject filter) {
-		return get(filter, (GetHandlers) null);
+	public void get(JSONObject filter, GetHandlers handlers) {
+		get(filter, null, handlers);
 	}
 
 	/**
 	 * @param data
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject update(JSONObject data, UpdateHandlers handlers) {
+	public void update(JSONObject data, final UpdateHandlers handlers) {
 
-		try {
+		room.send("update", data, new Method() {
 
-			JSONObject result = ((JSONObject) room.send("update", data, true));
+			@Override
+			public void handle(Object data) {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("validErrors") != true) {
-					handlers.notValid(result.getJSONObject("validErrors"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else if (result.isNull("savedData") == true) {
-					handlers.notExists();
-				} else {
-					handlers.success(result.getJSONObject("savedData"));
+				try {
+
+					JSONObject result = (JSONObject) data;
+
+					if (handlers != null) {
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("validErrors") != true) {
+							handlers.notValid(result.getJSONObject("validErrors"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else if (result.isNull("savedData") == true) {
+							handlers.notExists();
+						} else {
+							handlers.success(result.getJSONObject("savedData"));
+						}
+					}
+
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
 			}
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	/**
-	 * @param data
-	 * @return savedData
-	 */
-	public JSONObject update(JSONObject data) {
-		return update(data, null);
+		});
 	}
 
 	/**
 	 * @param id
 	 * @param handlers
-	 * @return savedData
 	 */
-	public JSONObject remove(String id, RemoveHandlers handlers) {
+	public void remove(String id, final RemoveHandlers handlers) {
 
-		try {
+		room.send("remove", id, new Method() {
 
-			JSONObject result = ((JSONObject) room.send("remove", id, true));
+			@Override
+			public void handle(Object data) {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else if (result.isNull("savedData") == true) {
-					handlers.notExists();
-				} else {
-					handlers.success(result.getJSONObject("savedData"));
+				try {
+
+					JSONObject result = (JSONObject) data;
+
+					if (handlers != null) {
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else if (result.isNull("savedData") == true) {
+							handlers.notExists();
+						} else {
+							handlers.success(result.getJSONObject("savedData"));
+						}
+					}
+
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
 			}
-
-			return result.isNull("savedData") ? null : result.getJSONObject("savedData");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	/**
-	 * @param id
-	 * @return savedData
-	 */
-	public JSONObject remove(String id) {
-		return remove(id, null);
+		});
 	}
 
 	/**
@@ -309,9 +267,8 @@ public class MODEL {
 	 * @param start
 	 * @param count
 	 * @param handlers
-	 * @return savedDataSet
 	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count, FindHandlers handlers) {
+	public void find(JSONObject filter, JSONObject sort, Long start, Long count, final FindHandlers handlers) {
 
 		try {
 
@@ -330,48 +287,41 @@ public class MODEL {
 				params.put("count", count);
 			}
 
-			JSONObject result = ((JSONObject) room.send("find", params, true));
+			room.send("find", params, new Method() {
 
-			if (result.isNull("savedDataSet")) {
-				return null;
-			}
+				@Override
+				public void handle(Object data) {
 
-			List<JSONObject> savedDataSet = new ArrayList<JSONObject>();
+					try {
 
-			JSONArray jsonArray = result.getJSONArray("savedDataSet");
+						JSONObject result = (JSONObject) data;
 
-			for (int i = 0; i < jsonArray.length(); i += 1) {
-				savedDataSet.add((JSONObject) jsonArray.get(i));
-			}
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else {
-					handlers.success(savedDataSet);
+							List<JSONObject> savedDataSet = new ArrayList<JSONObject>();
+
+							JSONArray jsonArray = result.getJSONArray("savedDataSet");
+
+							for (int i = 0; i < jsonArray.length(); i += 1) {
+								savedDataSet.add((JSONObject) jsonArray.get(i));
+							}
+
+							handlers.success(savedDataSet);
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-
-			return savedDataSet;
+			});
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
-		return null;
-	}
-
-	/**
-	 * @param filter
-	 * @param sort
-	 * @param start
-	 * @param count
-	 * @return savedDataSet
-	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long start, Long count) {
-		return find(filter, sort, start, count, null);
 	}
 
 	/**
@@ -379,79 +329,40 @@ public class MODEL {
 	 * @param sort
 	 * @param count
 	 * @param handlers
-	 * @return savedDataSet
 	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count, FindHandlers handlers) {
-		return find(filter, sort, null, count, handlers);
-	}
-
-	/**
-	 * @param filter
-	 * @param sort
-	 * @param count
-	 * @return savedDataSet
-	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, Long count) {
-		return find(filter, sort, count, (FindHandlers) null);
+	public void find(JSONObject filter, JSONObject sort, Long count, FindHandlers handlers) {
+		find(filter, sort, null, count, handlers);
 	}
 
 	/**
 	 * @param filter
 	 * @param sort
 	 * @param handlers
-	 * @return savedDataSet
 	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort, FindHandlers handlers) {
-		return find(filter, sort, null, handlers);
-	}
-
-	/**
-	 * @param filter
-	 * @param sort
-	 * @return savedDataSet
-	 */
-	public List<JSONObject> find(JSONObject filter, JSONObject sort) {
-		return find(filter, sort, (FindHandlers) null);
+	public void find(JSONObject filter, JSONObject sort, FindHandlers handlers) {
+		find(filter, sort, null, handlers);
 	}
 
 	/**
 	 * @param filter
 	 * @param handlers
-	 * @return savedDataSet
 	 */
-	public List<JSONObject> find(JSONObject filter, FindHandlers handlers) {
-		return find(filter, null, handlers);
-	}
-
-	/**
-	 * @param filter
-	 * @return savedDataSet
-	 */
-	public List<JSONObject> find(JSONObject filter) {
-		return find(filter, (FindHandlers) null);
+	public void find(JSONObject filter, FindHandlers handlers) {
+		find(filter, null, handlers);
 	}
 
 	/**
 	 * @param handlers
-	 * @return savedDataSet
 	 */
-	public List<JSONObject> find(FindHandlers handlers) {
-		return find(null, handlers);
-	}
-
-	/**
-	 * @return savedDataSet
-	 */
-	public List<JSONObject> find() {
-		return find((FindHandlers) null);
+	public void find(FindHandlers handlers) {
+		find(null, handlers);
 	}
 
 	/**
 	 * @param filter
 	 * @param handlers
-	 * @return count
 	 */
-	public Long count(JSONObject filter, CountHandlers handlers) {
+	public void count(JSONObject filter, final CountHandlers handlers) {
 
 		try {
 
@@ -461,56 +372,46 @@ public class MODEL {
 				params.put("filter", filter);
 			}
 
-			JSONObject result = ((JSONObject) room.send("count", params, true));
+			room.send("count", params, new Method() {
 
-			if (handlers != null) {
-				if (result.isNull("errorMsg") != true) {
-					handlers.error(result.getString("errorMsg"));
-				} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
-					handlers.notAuthed();
-				} else {
-					handlers.success(result.getLong("count"));
+				@Override
+				public void handle(Object data) {
+
+					try {
+
+						JSONObject result = (JSONObject) data;
+
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else {
+							handlers.success(result.getLong("count"));
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-
-			return result.isNull("count") ? null : result.getLong("count");
+			});
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
-		return null;
-	}
-
-	/**
-	 * @param filter
-	 * @return count
-	 */
-	public Long count(JSONObject filter) {
-		return count(filter, null);
 	}
 
 	/**
 	 * @param handlers
-	 * @return count
 	 */
-	public Long count(CountHandlers handlers) {
-		return count(null, handlers);
-	}
-
-	/**
-	 * @return count
-	 */
-	public Long count() {
-		return count((CountHandlers) null);
+	public void count(CountHandlers handlers) {
+		count(null, handlers);
 	}
 
 	/**
 	 * @param filter
 	 * @param handlers
-	 * @return isExists
 	 */
-	public Boolean checkIsExists(JSONObject filter, CheckIsExistsHandlers handlers) {
+	public void checkIsExists(JSONObject filter, final CheckIsExistsHandlers handlers) {
 
 		try {
 
@@ -520,38 +421,39 @@ public class MODEL {
 				params.put("filter", filter);
 			}
 
-			JSONObject result = ((JSONObject) room.send("checkIsExists", params, true));
+			room.send("checkIsExists", params, new Method() {
 
-			return result.isNull("isExists") ? null : result.getBoolean("isExists");
+				@Override
+				public void handle(Object data) {
+
+					try {
+
+						JSONObject result = (JSONObject) data;
+
+						if (result.isNull("errorMsg") != true) {
+							handlers.error(result.getString("errorMsg"));
+						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
+							handlers.notAuthed();
+						} else {
+							handlers.success(result.getBoolean("isExists"));
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
-		return null;
-	}
-
-	/**
-	 * @param filter
-	 * @return isExists
-	 */
-	public Boolean checkIsExists(JSONObject filter) {
-		return checkIsExists(filter, null);
 	}
 
 	/**
 	 * @param handlers
-	 * @return isExists
 	 */
-	public Boolean checkIsExists(CheckIsExistsHandlers handlers) {
-		return checkIsExists(null, handlers);
-	}
-
-	/**
-	 * @return isExists
-	 */
-	public Boolean checkIsExists() {
-		return checkIsExists((CheckIsExistsHandlers) null);
+	public void checkIsExists(CheckIsExistsHandlers handlers) {
+		checkIsExists(null, handlers);
 	}
 
 	private interface Rooms {

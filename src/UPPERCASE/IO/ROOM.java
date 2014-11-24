@@ -1,14 +1,15 @@
 package UPPERCASE.IO;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ROOM {
 
 	private String roomName;
-	private Map<String, List<Method>> methodMap = CONNECT.getMethodMap();
-	private List<String> methodNames = new ArrayList<String>();
+	private Map<String, List<Method>> methodMap = new HashMap<String, List<Method>>();
+	private boolean isExited;
 
 	/**
 	 * @param boxName
@@ -26,9 +27,10 @@ public class ROOM {
 
 		List<Method> methods = methodMap.get(roomName + "/" + methodName);
 
+		CONNECT.on(roomName + "/" + methodName, method);
+
 		if (methodMap.get(roomName + "/" + methodName) == null) {
 			methodMap.put(roomName + "/" + methodName, methods = new ArrayList<Method>());
-			methodNames.add(methodName);
 		}
 
 		methods.add(method);
@@ -42,6 +44,8 @@ public class ROOM {
 
 		List<Method> methods = methodMap.get(roomName + "/" + methodName);
 
+		CONNECT.off(roomName + "/" + methodName, method);
+
 		methods.remove(method);
 
 		if (methods.size() == 0) {
@@ -53,18 +57,30 @@ public class ROOM {
 	 * @param methodName
 	 */
 	public void off(String methodName) {
+
+		List<Method> methods = methodMap.get(roomName + "/" + methodName);
+
+		for (Method method : methods) {
+			CONNECT.off(roomName + "/" + methodName, method);
+		}
+
 		methodMap.remove(roomName + "/" + methodName);
-		methodNames.remove(methodName);
 	}
 
 	/**
 	 * @param methodName
 	 * @param data
-	 * @param isWithCallback
-	 * @return returnData
+	 * @param method
 	 */
-	public Object send(String methodName, Object data, boolean isWithCallback) {
-		return CONNECT.send(roomName + "/" + methodName, data, isWithCallback);
+	public void send(String methodName, Object data, Method method) {
+
+		if (isExited != true) {
+
+			CONNECT.send(roomName + "/" + methodName, data, method);
+
+		} else {
+			System.out.println("[UPPERCASE.IO-ROOM] `ROOM.send` ERROR! ROOM EXITED!");
+		}
 	}
 
 	/**
@@ -72,7 +88,7 @@ public class ROOM {
 	 * @param data
 	 */
 	public void send(String methodName, Object data) {
-		send(methodName, data, false);
+		send(methodName, data, null);
 	}
 
 	/**
@@ -80,10 +96,18 @@ public class ROOM {
 	 */
 	public void exit() {
 
-		CONNECT.send("__EXIT_ROOM", roomName, false);
+		if (isExited != true) {
 
-		for (String methodName : methodNames) {
-			methodMap.remove(roomName + "/" + methodName);
+			CONNECT.exitRoom(roomName);
+
+			for (String methodName : methodMap.keySet()) {
+				off(methodName);
+			}
+
+			// free method map.
+			methodMap = null;
+
+			isExited = true;
 		}
 	}
 }

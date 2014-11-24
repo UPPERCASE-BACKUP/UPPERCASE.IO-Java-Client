@@ -5,8 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.Socket;
@@ -26,10 +24,9 @@ public class CONNECT {
 	private static Socket socket;
 	private static BufferedReader reader;
 	private static PrintWriter out;
-	private static Map<String, PrintWriter> pipeMap = new HashMap<String, PrintWriter>();
 	private static int sendKey = 0;
 
-	private static List<String> roomNames = new ArrayList<String>();
+	private static List<String> enterRoomNames = new ArrayList<String>();
 	private static Map<String, List<Method>> methodMap = new HashMap<String, List<Method>>();
 
 	private static boolean isDisconnected;
@@ -81,20 +78,11 @@ public class CONNECT {
 										data = json.get("data");
 									}
 
-									PrintWriter pipe = pipeMap.get(methodName);
+									List<Method> methods = methodMap.get(methodName);
 
-									if (pipe != null) {
-										pipe.println(data);
-										pipe.close();
-										pipe = null;
-									} else {
-
-										List<Method> methods = getMethodMap().get(methodName);
-
-										if (methods != null) {
-											for (Method method : methods) {
-												method.handle(data instanceof JSONObject ? UTIL.UNPACK_DATA((JSONObject) data) : data);
-											}
+									if (methods != null) {
+										for (Method method : methods) {
+											method.handle(data instanceof JSONObject ? UTIL.UNPACK_DATA((JSONObject) data) : data);
 										}
 									}
 								}
@@ -117,9 +105,8 @@ public class CONNECT {
 			checkUpdateThread.start();
 		}
 
-		// re-enter opened room.
-		for (String roomName : roomNames) {
-			send("__ENTER_ROOM", roomName, false);
+		for (String roomName : enterRoomNames) {
+			send("__ENTER_ROOM", roomName);
 		}
 	}
 
@@ -178,6 +165,43 @@ public class CONNECT {
 		return CONNECT_TO_IO_SERVER(host, false, webServerPort, socketServerPort, disconnectedHandler);
 	}
 
+	/**
+	 * @param methodName
+	 * @param method
+	 */
+	public static void on(String methodName, Method method) {
+
+		List<Method> methods = methodMap.get(methodName);
+
+		if (methodMap.get(methodName) == null) {
+			methodMap.put(methodName, methods = new ArrayList<Method>());
+		}
+
+		methods.add(method);
+	}
+
+	/**
+	 * @param methodName
+	 * @param method
+	 */
+	public static void off(String methodName, Method method) {
+
+		List<Method> methods = methodMap.get(methodName);
+
+		methods.remove(method);
+
+		if (methods.size() == 0) {
+			off(methodName);
+		}
+	}
+
+	/**
+	 * @param methodName
+	 */
+	public static void off(String methodName) {
+		methodMap.remove(methodName);
+	}
+
 	private static class SendThread implements Runnable {
 
 		JSONObject sendData;
@@ -192,7 +216,7 @@ public class CONNECT {
 		}
 	}
 
-	public static Object send(String methodName, Object data, boolean isToReceive) {
+	public static void send(String methodName, Object data, final Method method) {
 
 		try {
 
@@ -201,48 +225,49 @@ public class CONNECT {
 			sendData.put("data", data instanceof JSONObject ? UTIL.PACK_DATA((JSONObject) data) : data);
 			sendData.put("sendKey", sendKey);
 
-			String callbackMethodName = "__CALLBACK_" + sendKey;
+			final String callbackName = "__CALLBACK_" + sendKey;
+
+			if (method != null) {
+
+				// on callback.
+				on(callbackName, new Method() {
+
+					@Override
+					public void handle(Object data) {
+
+						// run callback.
+						method.handle(data);
+
+						// off callback.
+						off(callbackName);
+					}
+				});
+			}
 
 			sendKey += 1;
 
 			new Thread(new SendThread(sendData)).start();
 
-			if (isToReceive == true) {
-
-				try {
-					PipedOutputStream output = new PipedOutputStream();
-
-					pipeMap.put(callbackMethodName, new PrintWriter(new BufferedWriter(new OutputStreamWriter(output)), true));
-
-					@SuppressWarnings("resource")
-					String json = new BufferedReader(new InputStreamReader(new PipedInputStream(output))).readLine();
-
-					if (json == null || json.equals("null")) {
-						return null;
-					}
-
-					JSONObject result = new JSONObject(json);
-
-					return UTIL.UNPACK_DATA(result);
-
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+	}
 
-		return null;
+	public static void send(String methodName, Object data) {
+		send(methodName, data, null);
 	}
 
 	public static void enterRoom(String roomName) {
-		send("__ENTER_ROOM", roomName, false);
-		roomNames.add(roomName);
+
+		enterRoomNames.add(roomName);
+
+		send("__ENTER_ROOM", roomName);
 	}
 
-	static Map<String, List<Method>> getMethodMap() {
-		return methodMap;
+	public static void exitRoom(String roomName) {
+
+		send("__EXIT_ROOM", roomName);
+
+		enterRoomNames.remove(roomName);
 	}
 }
