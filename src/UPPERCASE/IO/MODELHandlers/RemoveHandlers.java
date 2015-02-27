@@ -16,6 +16,6 @@ public abstract class RemoveHandlers {
 		System.out.println("[UPPERCASE.IO-MODEL] `remove` NOT AUTHED!");
 	}
 
-	public void success(JSONObject savedData) {
+	public void success(JSONObject originData) {
 	}
 }

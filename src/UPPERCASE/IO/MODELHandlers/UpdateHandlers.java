@@ -20,6 +20,6 @@ public abstract class UpdateHandlers {
 		System.out.println("[UPPERCASE.IO-MODEL] `update` NOT AUTHED!");
 	}
 
-	public void success(JSONObject savedData) {
+	public void success(JSONObject savedData, JSONObject originData) {
 	}
 }

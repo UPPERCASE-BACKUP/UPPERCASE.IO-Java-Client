@@ -216,7 +216,7 @@ public class MODEL {
 						} else if (result.isNull("savedData") == true) {
 							handlers.notExists();
 						} else {
-							handlers.success(result.getJSONObject("savedData"));
+							handlers.success(result.getJSONObject("savedData"), result.getJSONObject("originData"));
 						}
 					}
 
@@ -247,10 +247,10 @@ public class MODEL {
 							handlers.error(result.getString("errorMsg"));
 						} else if (result.isNull("isNotAuthed") != true && result.getBoolean("isNotAuthed") == true) {
 							handlers.notAuthed();
-						} else if (result.isNull("savedData") == true) {
+						} else if (result.isNull("originData") == true) {
 							handlers.notExists();
 						} else {
-							handlers.success(result.getJSONObject("savedData"));
+							handlers.success(result.getJSONObject("originData"));
 						}
 					}
 
