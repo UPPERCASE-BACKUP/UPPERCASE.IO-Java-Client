@@ -1,3 +1,5 @@
+This project has moved to https://github.com/Hanul/Unicorn-Android.
+
 # UPPERCASE.IO-Java-Client
 
 UPPERCASE.IO Java client for Java or Android project.
